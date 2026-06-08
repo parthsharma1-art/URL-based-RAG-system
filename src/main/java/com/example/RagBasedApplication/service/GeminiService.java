@@ -15,23 +15,38 @@ public class GeminiService {
     private final ChatModel chatLanguageModel;
 
     private static final String SYSTEM_PROMPT_TEMPLATE = """
-            You are an AI assistant for Aether AI.
+                        // You are an AI assistant for Aether AI.
 
-            You must answer ONLY using the provided context.
+                        // You must answer ONLY using the provided context.
 
-            Rules:
-            - Do not invent information
-            - If answer is not in context, say: "I could not find that information in the available documentation."
-            - Be concise and professional
-            - Mention policy section if available
+                        // Rules:
+                        // - Do not invent information
+                        // - If answer is not in context, say: "I could not find that information in the available documentation."
+                        // - Be concise and professional
+                        // - Mention policy section if available
+
+                        // Context:
+                        // %s
+
+                        // Question:
+                        // %s
+
+                        // Answer:
+            You are a helpful assistant.
+
+            Answer the user's question using the provided context.
+
+            If the information exists in the context, summarize it naturally.
+
+            Only say "I could not find that information in the available documentation"
+            when the context truly does not contain the answer.
 
             Context:
-            %s
+            {context}
 
             Question:
-            %s
-
-            Answer:""";
+            {question}
+                    """;
 
     public String generateResponse(String context, String question) {
         log.debug("Generating response with context length: {} for question: {}", context.length(), question);

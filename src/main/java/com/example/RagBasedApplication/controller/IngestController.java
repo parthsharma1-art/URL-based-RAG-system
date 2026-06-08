@@ -23,8 +23,8 @@ public class IngestController {
 
     @PostMapping
     public SuccessDTO ingest(@RequestBody URls urlsRequest) {
-        ingestionService.ingestUrls(urlsRequest.getUrls());
-        return SuccessDTO.of("Ingestion completed");
+        return ingestionService.ingestUrls(urlsRequest.getUrls());
+        
     }
 
     @Data

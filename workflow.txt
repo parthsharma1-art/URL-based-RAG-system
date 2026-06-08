@@ -4,44 +4,66 @@
 
 
 
-    Complete Workflow
-    1. Ingestion workflow        ---------------------->
-    Request:
+Complete Workflow
 
-    POST /ingest
-    Body: List<String> of URLs
-    Controller:
+1. Ingestion Workflow
+   ---------------------->
 
-    IngestController.ingest(...)
-    Calls IngestionService.ingestUrls(urls)
-    IngestionService:
+Request:
+POST /ingest
+Body:
+List<String> of URLs
 
-    For each URL:
-    -Fetch HTML with Jsoup
-    -Remove unwanted elements (nav, header, footer, script, style, etc.)
-    -Extract text from headings and paragraphs
-    -Extract page title
-    -Create a LangChain4j Document
-    -Split the document into chunks using DocumentSplitters.recursive(1000, 200)
+Controller:
 
+-IngestController.ingest(...)
 
-    Embeddings:
+Calls:
 
-    -Each chunk text is sent to EmbeddingService.embed(text)
-    -EmbeddingService uses a Spring EmbeddingModel
+-IngestionService.ingestUrls(urls)
 
+IngestionService:
 
-    Storage:
+For each URL:
 
-    -Existing chunks for the same URL are deleted
-    -New DocumentChunk records are saved to DocumentChunkRepository
+* Detect content type (HTML, PDF, DOCX, TXT, Google Drive PDF)
+* Route the URL to the appropriate parser
 
+HTML URLs:
+* Fetch content using Jsoup
+* Remove unwanted elements (nav, header, footer, script, style, noscript, iframe)
+* Extract text from headings and paragraphs
+* Extract page title
 
-    Each chunk stores:
-    -content
-    -sourceUrl
-    -embedding
-    -metadata like title
+PDF URLs:
+* Download PDF
+* Extract text using Apache PDFBox
+
+DOCX URLs:
+* Download DOCX file
+* Extract text using Apache POI
+
+TXT URLs:
+* Download text file
+* Read content as UTF-8 text
+
+Google Drive PDF URLs:
+* Convert sharing URL into direct download URL
+* Download PDF
+* Extract text using Apache PDFBox
+
+After content extraction:
+* Create a LangChain4j Document
+* Attach metadata (source_url, title)
+* Split document into chunks using DocumentSplitters.recursive(1000, 200)
+* Generate embeddings for each chunk
+* Remove existing chunks for the same source URL
+* Store chunks, embeddings, and metadata in the database
+
+Response:
+
+Success = X
+Failed = Y
 
 
 
