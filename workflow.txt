@@ -1,0 +1,88 @@
+    Summary
+    POST /ingest = scrape URLs, split text, embed chunks, store them
+    POST /chat = embed question, retrieve similar chunks, generate answer with Gemini, return answer + sources
+
+
+
+    Complete Workflow
+    1. Ingestion workflow        ---------------------->
+    Request:
+
+    POST /ingest
+    Body: List<String> of URLs
+    Controller:
+
+    IngestController.ingest(...)
+    Calls IngestionService.ingestUrls(urls)
+    IngestionService:
+
+    For each URL:
+    -Fetch HTML with Jsoup
+    -Remove unwanted elements (nav, header, footer, script, style, etc.)
+    -Extract text from headings and paragraphs
+    -Extract page title
+    -Create a LangChain4j Document
+    -Split the document into chunks using DocumentSplitters.recursive(1000, 200)
+
+
+    Embeddings:
+
+    -Each chunk text is sent to EmbeddingService.embed(text)
+    -EmbeddingService uses a Spring EmbeddingModel
+
+
+    Storage:
+
+    -Existing chunks for the same URL are deleted
+    -New DocumentChunk records are saved to DocumentChunkRepository
+
+
+    Each chunk stores:
+    -content
+    -sourceUrl
+    -embedding
+    -metadata like title
+
+
+
+    2. Chat workflow  ----------------------->
+    Request:
+
+    POST /chat
+    Body: { "question": "..." }
+    Controller:
+
+    ChatController.chat(...)
+    Gets client IP
+    Calls RAGService.chat(question)
+    Saves user question/answer history via UserDetailsService
+
+
+
+    RAGService:
+    -Create embedding for the question using EmbeddingService.embed(question)
+    -Load all stored DocumentChunk entries from DocumentChunkRepository
+    -Compute cosine similarity between question embedding and each chunk embedding
+    -Sort and select top k chunks (top 5)
+
+
+
+    Context building:
+    -Join selected chunk texts into one context string
+
+
+
+    Response generation:
+
+    -Call GeminiService.generateResponse(context, question)
+    -GeminiService builds a prompt with:
+    -system instructions
+    -context
+    -question
+    -Sends it to the configured ChatModel
+
+
+    Return:
+    ChatController returns:
+    -answer
+    -list of sources with url and chunk text
