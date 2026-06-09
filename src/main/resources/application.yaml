@@ -4,12 +4,12 @@ spring:
 
   data:
     mongodb:
-      uri: <YOUR_MONGODB_URI>
+      uri: ${MONGO_URI}
 
 langchain4j:
   google-ai:
     gemini:
-      api-key: <YOUR_GEMINI_API_KEY>
+      api-key: ${GEMINI_API_KEY}
       model-name: gemini-2.5-flash
 
 
